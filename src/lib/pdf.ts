@@ -140,16 +140,13 @@ export async function generateReportPdf(report: Report) {
       const img = images[photoIndex];
       if (img) {
         const pad = 1.5;
-        const maxW = cellW - pad * 2;
-        const maxH = imgBoxH - pad * 2;
-        const ratio = Math.min(maxW / img.width, maxH / img.height);
-        const w = img.width * ratio;
-        const h = img.height * ratio;
+        const w = cellW - pad * 2;
+        const h = imgBoxH - pad * 2;
         doc.addImage(
           img,
           "JPEG",
-          x + (cellW - w) / 2,
-          y + (imgBoxH - h) / 2,
+          x + pad,
+          y + pad,
           w,
           h,
         );
