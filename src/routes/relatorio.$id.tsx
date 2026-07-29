@@ -47,8 +47,10 @@ function Editor() {
   const fileInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    setReport(getReport(id) ?? null);
-    setLoaded(true);
+    (async () => {
+      setReport((await getReport(id)) ?? null);
+      setLoaded(true);
+    })();
   }, [id]);
 
   const update = (patch: Partial<Report>) =>
@@ -87,19 +89,19 @@ function Editor() {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     try {
-      upsertReport(report);
+      await upsertReport(report);
       toast.success("Relatório salvo");
     } catch {
-      toast.error("Armazenamento cheio. Remova fotos ou relatórios antigos.");
+      toast.error("Erro ao salvar relatório.");
     }
   };
 
   const handlePdf = async () => {
     setBusy(true);
     try {
-      upsertReport(report);
+      await upsertReport(report);
       await generateReportPdf(report);
       toast.success("PDF gerado");
     } catch {

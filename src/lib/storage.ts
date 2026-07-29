@@ -1,60 +1,43 @@
 import type { Report, ReportSettings } from "./types";
 import { defaultSettings } from "./types";
+import {
+  loadReports as loadReportsFromServer,
+  upsertReport as upsertReportOnServer,
+  deleteReport as deleteReportOnServer,
+  loadGlobalSettings as loadGlobalSettingsFromServer,
+  saveGlobalSettings as saveGlobalSettingsOnServer,
+} from "./server-storage";
 
-const REPORTS_KEY = "rf:reports";
-const SETTINGS_KEY = "rf:settings";
-
-function isBrowser() {
-  return typeof window !== "undefined";
-}
-
-export function loadReports(): Report[] {
-  if (!isBrowser()) return [];
+export async function loadReports(): Promise<Report[]> {
   try {
-    const raw = localStorage.getItem(REPORTS_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as Report[];
-    return Array.isArray(parsed) ? parsed : [];
+    return await loadReportsFromServer();
   } catch {
     return [];
   }
 }
 
-export function saveReports(reports: Report[]) {
-  if (!isBrowser()) return;
-  localStorage.setItem(REPORTS_KEY, JSON.stringify(reports));
+export async function getReport(id: string): Promise<Report | undefined> {
+  const reports = await loadReports();
+  return reports.find((r) => r.id === id);
 }
 
-export function getReport(id: string): Report | undefined {
-  return loadReports().find((r) => r.id === id);
-}
-
-export function upsertReport(report: Report) {
-  const reports = loadReports();
-  const index = reports.findIndex((r) => r.id === report.id);
+export async function upsertReport(report: Report): Promise<Report> {
   const next = { ...report, updatedAt: new Date().toISOString() };
-  if (index >= 0) reports[index] = next;
-  else reports.unshift(next);
-  saveReports(reports);
-  return next;
+  return await upsertReportOnServer({ data: next });
 }
 
-export function deleteReport(id: string) {
-  saveReports(loadReports().filter((r) => r.id !== id));
+export async function deleteReport(id: string): Promise<void> {
+  await deleteReportOnServer({ data: { id } });
 }
 
-export function loadGlobalSettings(): ReportSettings {
-  if (!isBrowser()) return defaultSettings;
+export async function loadGlobalSettings(): Promise<ReportSettings> {
   try {
-    const raw = localStorage.getItem(SETTINGS_KEY);
-    if (!raw) return defaultSettings;
-    return { ...defaultSettings, ...(JSON.parse(raw) as ReportSettings) };
+    return await loadGlobalSettingsFromServer();
   } catch {
     return defaultSettings;
   }
 }
 
-export function saveGlobalSettings(settings: ReportSettings) {
-  if (!isBrowser()) return;
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+export async function saveGlobalSettings(settings: ReportSettings): Promise<void> {
+  await saveGlobalSettingsOnServer({ data: settings });
 }

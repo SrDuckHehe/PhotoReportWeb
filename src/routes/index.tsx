@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { FileText, Plus, Trash2, Images, MapPin, Settings2 } from "lucide-react";
 import type { Report } from "@/lib/types";
-import { createEmptyReport } from "@/lib/types";
+import { createEmptyReport, defaultSettings } from "@/lib/types";
 import {
   deleteReport,
   loadGlobalSettings,
@@ -49,17 +49,19 @@ function formatDate(value: string) {
 function Dashboard() {
   const navigate = useNavigate();
   const [reports, setReports] = useState<Report[]>([]);
-  const [settings, setSettings] = useState(loadGlobalSettings());
+  const [settings, setSettings] = useState(defaultSettings);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
-    setReports(loadReports());
-    setSettings(loadGlobalSettings());
+    (async () => {
+      setReports(await loadReports());
+      setSettings(await loadGlobalSettings());
+    })();
   }, []);
 
-  const handleNew = () => {
-    const report = { ...createEmptyReport(), settings: loadGlobalSettings() };
-    upsertReport(report);
+  const handleNew = async () => {
+    const report = { ...createEmptyReport(), settings: await loadGlobalSettings() };
+    await upsertReport(report);
     navigate({ to: "/relatorio/$id", params: { id: report.id } });
   };
 
@@ -92,9 +94,9 @@ function Dashboard() {
                 </DialogHeader>
                 <SettingsForm
                   settings={settings}
-                  onChange={(s) => {
+                  onChange={async (s) => {
                     setSettings(s);
-                    saveGlobalSettings(s);
+                    await saveGlobalSettings(s);
                   }}
                 />
               </DialogContent>
@@ -111,7 +113,7 @@ function Dashboard() {
         <p className="mt-1 text-sm text-muted-foreground">
           {reports.length === 0
             ? "Comece criando seu primeiro relatório fotográfico."
-            : `${reports.length} relatório(s) salvos neste navegador.`}
+            : `${reports.length} relatório(s) salvos.`}
         </p>
 
         {reports.length === 0 ? (
@@ -169,9 +171,9 @@ function Dashboard() {
                       size="icon"
                       className="size-8 text-muted-foreground hover:text-destructive"
                       aria-label="Excluir relatório"
-                      onClick={() => {
-                        deleteReport(report.id);
-                        setReports(loadReports());
+                      onClick={async () => {
+                        await deleteReport(report.id);
+                        setReports(await loadReports());
                       }}
                     >
                       <Trash2 className="size-4" />
