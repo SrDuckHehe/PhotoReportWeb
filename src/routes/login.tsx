@@ -47,7 +47,7 @@ function LoginPage() {
             <LockKeyhole className="size-6" />
           </span>
           <div>
-            <p className="text-lg font-semibold text-foreground">ObraFoto</p>
+            <p className="text-lg font-semibold text-foreground">PhotoReport</p>
             <p className="text-sm text-muted-foreground">Relatórios fotográficos de obras</p>
           </div>
         </div>
