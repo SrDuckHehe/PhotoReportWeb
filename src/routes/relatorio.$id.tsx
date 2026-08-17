@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { ArrowLeft, Download, Loader2, Save, Settings2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import type { Report } from "@/lib/types";
 import { getReport, upsertReport } from "@/lib/storage";
 import { fileToOptimizedDataUrl } from "@/lib/image";
 import { generateReportPdf } from "@/lib/pdf";
+import { isAuthenticated } from "@/lib/auth";
 import { PhotoGrid } from "@/components/PhotoGrid";
 import { SettingsForm } from "@/components/SettingsForm";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,11 @@ import {
 } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/relatorio/$id")({
+  beforeLoad: async () => {
+    if (!(await isAuthenticated())) {
+      throw redirect({ to: "/login" });
+    }
+  },
   head: () => ({
     meta: [
       { title: "Editor de Relatório Fotográfico | ObraFoto" },

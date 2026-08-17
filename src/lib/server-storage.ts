@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import type { Report, ReportSettings } from "./types";
 import { defaultSettings } from "./types";
+import { requireAuth } from "./auth";
 
 const DATA_DIR = "data";
 const REPORTS_FILE = "reports.json";
@@ -35,12 +36,14 @@ async function writeJSON(filePath: string, data: unknown) {
 }
 
 export const loadReports = createServerFn({ method: "GET" }).handler(async () => {
+  await requireAuth();
   return readJSON<Report[]>(REPORTS_FILE, []);
 });
 
 export const upsertReport = createServerFn({ method: "POST" })
   .validator((data: unknown) => data as Report)
   .handler(async (ctx) => {
+    await requireAuth();
     const report = ctx.data;
     const reports = await readJSON<Report[]>(REPORTS_FILE, []);
     const index = reports.findIndex((r) => r.id === report.id);
@@ -54,17 +57,20 @@ export const upsertReport = createServerFn({ method: "POST" })
 export const deleteReport = createServerFn({ method: "POST" })
   .validator((data: unknown) => data as { id: string })
   .handler(async (ctx) => {
+    await requireAuth();
     const { id } = ctx.data;
     const reports = await readJSON<Report[]>(REPORTS_FILE, []);
     await writeJSON(REPORTS_FILE, reports.filter((r) => r.id !== id));
   });
 
 export const loadGlobalSettings = createServerFn({ method: "GET" }).handler(async () => {
+  await requireAuth();
   return readJSON<ReportSettings>(SETTINGS_FILE, defaultSettings);
 });
 
 export const saveGlobalSettings = createServerFn({ method: "POST" })
   .validator((data: unknown) => data as ReportSettings)
   .handler(async (ctx) => {
+    await requireAuth();
     await writeJSON(SETTINGS_FILE, ctx.data);
   });

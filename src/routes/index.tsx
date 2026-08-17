@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { FileText, Plus, Trash2, Images, MapPin, Settings2 } from "lucide-react";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
+import { FileText, Plus, Trash2, Images, LogOut, MapPin, Settings2 } from "lucide-react";
+import { isAuthenticated, logout } from "@/lib/auth";
 import type { Report } from "@/lib/types";
 import { createEmptyReport, defaultSettings } from "@/lib/types";
 import {
@@ -22,6 +23,11 @@ import {
 import { SettingsForm } from "@/components/SettingsForm";
 
 export const Route = createFileRoute("/")({
+  beforeLoad: async () => {
+    if (!(await isAuthenticated())) {
+      throw redirect({ to: "/login" });
+    }
+  },
   head: () => ({
     meta: [
       { title: "Relatórios Fotográficos de Obras | ObraFoto" },
@@ -65,6 +71,14 @@ function Dashboard() {
     navigate({ to: "/relatorio/$id", params: { id: report.id } });
   };
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } finally {
+      window.location.href = "/login";
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-surface">
@@ -101,6 +115,9 @@ function Dashboard() {
                 />
               </DialogContent>
             </Dialog>
+            <Button variant="outline" size="sm" onClick={handleLogout}>
+              <LogOut className="size-4" /> Sair
+            </Button>
             <Button size="sm" onClick={handleNew}>
               <Plus className="size-4" /> Novo Relatório
             </Button>
